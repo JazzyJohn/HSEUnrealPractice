@@ -37,7 +37,7 @@ public:
 	void UpdateEndStatus();
 	EQuestStatus GetQuestStatus() const {return QuestStatus;}
 protected:
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TObjectPtr<UQuestSettings> QuestSettings;
 
 	UPROPERTY()

@@ -15,7 +15,7 @@ class PRACTICE_API UQuestSettings : public UDataAsset
 {
 	GENERATED_BODY()
 public:
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FText Name;
 	UPROPERTY(EditAnywhere)
 	TArray<TSubclassOf<UQuestCondition>> StartConditions;
