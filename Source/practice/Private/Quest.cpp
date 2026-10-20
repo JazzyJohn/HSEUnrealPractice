@@ -8,6 +8,11 @@
 #include "QuestSystemComponent.h"
 #include "GameFramework/GameModeBase.h"
 
+int32 bDebugInstantFinish = 0;
+FAutoConsoleVariableRef CVarDebugInstantFinish(TEXT("quest.InstantFinish"),
+	bDebugInstantFinish, TEXT("Debug Instantly Finish Quests"),
+	ECVF_Cheat);
+
 // Sets default values
 AQuest::AQuest()
 {
@@ -24,16 +29,17 @@ void AQuest::BeginPlay()
 	{
 		QuestComponent->RegisterQuest(this);
 	}
-	for(const TSubclassOf<UQuestCondition>& ConditionTemplate: QuestSettings->StartConditions)
+	for(const UQuestCondition* ConditionTemplate: QuestSettings->StartConditionsInst)
 	{
 		if (!ensureMsgf(ConditionTemplate, TEXT("Bad setup for quest %s"), *GetNameSafe(this)))
 		{
 			return;
 		}
-		UQuestCondition* QuestCondition = NewObject<UQuestCondition>(this, ConditionTemplate);
+		UQuestCondition* QuestCondition = DuplicateObject<UQuestCondition>(ConditionTemplate, this);
 		QuestCondition->StartCondition();
 		QuestCondition->OnQuestConditionCompleted.AddUObject(this, &AQuest::UpdateStartStatus);
-		StartConditions.Add(QuestCondition);		
+		StartConditions.Add(QuestCondition);
+	
 	}
 	
 }
@@ -60,14 +66,20 @@ void AQuest::UpdateStartStatus()
 	}
 
 	QuestStatus = EQuestStatus::Started;
+	
+	if(bDebugInstantFinish)
+	{
+		QuestStatus = EQuestStatus::Completed;
+		return;
+	}
 
-	for(const TSubclassOf<UQuestCondition>& ConditionTemplate: QuestSettings->EndConditions)
+	for(const UQuestCondition* ConditionTemplate: QuestSettings->EndConditionsInst)
 	{
 		if (!ensureMsgf(ConditionTemplate, TEXT("Bad setup for quest %s"), *GetNameSafe(this)))
 		{
 			return;
 		}
-		UQuestCondition* QuestCondition = NewObject<UQuestCondition>(this, ConditionTemplate);
+		UQuestCondition* QuestCondition  = DuplicateObject<UQuestCondition>(ConditionTemplate, this);
 		QuestCondition->StartCondition();
 		QuestCondition->OnQuestConditionCompleted.AddUObject(this, &AQuest::UpdateEndStatus);
 		EndConditions.Add(QuestCondition);		
